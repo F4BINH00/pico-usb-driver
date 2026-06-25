@@ -1,36 +1,39 @@
-# pico_usb – Driver Linux + Firmware + App
+# 🚀 Pico_USB: Driver Linux & Firmware
 
-**Autores:**
-- Fábio Rodrigues Borges Filho
-- Rodrigo dos Santos Albuquerque
+Projeto de implementação de comunicação USB entre **Host Linux** e **Raspberry Pi Pico (RP2040)**.
 
----
+## 👥 Autores
+* **Fábio Rodrigues Borges Filho**
+* **Rodrigo dos Santos Albuquerque**
 
-1) **Driver Linux (kernel module)** com operações **read/write** em endpoints **bulk**.
-2) **Firmware** (TinyUSB) para uma placa em modo **USB Device** (Raspberry Pi Pico / RP2040).
-3) **Aplicação de usuário** que conversa com o dispositivo através de um arquivo de dispositivo em `/dev`.
+## 📖 Visão Geral
+Este projeto demonstra a integração entre hardware e sistema operacional através de:
+* **Firmware:** Implementado com [TinyUSB] para operar em modo *USB Device*.
+* **Driver Linux:** Módulo de Kernel que expõe o hardware via interface de arquivos `/dev`.
+* **Aplicação de Usuário:** Software para interação (read/write) com o dispositivo.
 
-## Protocolo simples (host ↔ device)
+## 🔌 Protocolo de Comunicação
+Utilizamos a **USB Vendor Class** com dois *Endpoints Bulk*:
+* **OUT (Host → Dispositivo):** Envio de comandos/payloads.
+* **IN (Dispositivo → Host):** Recebimento de respostas.
 
-O firmware implementa uma interface **USB Vendor Class** com 2 endpoints Bulk:
-- **OUT (host → device):** recebe comandos/payload (usado por `write()` no driver).
-- **IN (device → host):** envia respostas (usado por `read()` no driver).
+**Identificadores:** `VID: 0xCAFE` | `PID: 0x4001`
 
-VID/PID do dispositivo:
-- **VID:** `0xCAFE`
-- **PID:** `0x4001`
+### Comandos Suportados
+| Comando | Hex | Descrição |
+| :--- | :--- | :--- |
+| `LED_ON` | `0x01` | Liga o LED do Pico |
+| `LED_OFF` | `0x02` | Desliga o LED do Pico |
+| `BLINK` | `0x03` | Pisca o LED (args: reps, period_ms/10) |
+| `ECHO` | `0x10` | Ecoa o payload recebido (Teste de integridade) |
 
-Comandos (primeiro byte do pacote):
-- `0x01` `LED_ON`  → liga LED e responde `OK:LED_ON`
-- `0x02` `LED_OFF` → desliga LED e responde `OK:LED_OFF`
-- `0x03` `BLINK`   → bytes: `[0x03, reps, period_ms/10]`, responde `OK:BLINK`
-- `0x10` `ECHO`    → ecoa o payload recebido (útil para testar **read**)
+## 🛠️ Como Utilizar
 
-## Driver Linux (driver/)
+### Driver Linux
+Navegue até a pasta `/driver` e utilize o `make`:
+
 ```bash
-make        # Compila o módulo pico_usb.ko
-make clean  # Remove arquivos de compilação
-
-make load   # Carrega o driver no kernel (insmod)
-make remove # Remove o driver do kernel (rmmod)
-make reload # Remove e carrega novamente o driver
+make          # Compila o módulo pico_usb.ko
+sudo make load    # Insere o módulo no Kernel (insmod)
+sudo make remove  # Remove o módulo (rmmod)
+sudo make reload  # Ciclo de recarga
